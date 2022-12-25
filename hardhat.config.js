@@ -3,7 +3,7 @@ require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 require("solidity-coverage");
 require("hardhat-gas-reporter");
-require("hardhat-deploy")
+require("hardhat-deploy");
 
 /** @type import('hardhat/config').HardhatUserConfig */
 
@@ -19,6 +19,7 @@ module.exports = {
       url: GOERLI_RPC_URL,
       accounts: [PRIVATE_KEY],
       chainId: 5,
+      blockConfirmations: 6
     },
   },
   solidity: "0.8.17",
@@ -31,5 +32,11 @@ module.exports = {
     outputFile: "gas-report.txt",
     noColors: true,
     // coinmarketcap: COINMARKETCAP_API_KEY,
+  },
+  namedAccounts: {
+    deployer: {
+      default: 0,
+      1: 0,
+    },
   },
 };
