@@ -4,24 +4,44 @@ pragma solidity 0.8.17;
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "./PriceConverter.sol";
 
-error NotOwner();
+error FundMe__notOwner();
 
+/** @title a contract for crowd funding
+ *  @author Navnith Bharadwaj
+ *  @notice this is a demo funding contract
+ *  @dev this implements price feeds as our library
+ */
 contract FundMe {
     using PriceConverter for uint256;
 
     mapping(address => uint256) public addressToAmountFunded;
     address[] public funders;
-
-    address public i_owner;
+    address public immutable i_owner;
     uint256 public constant MINIMUM_USD = 50 * 10 ** 18;
-
     AggregatorV3Interface public priceFeed;
+
+    modifier onlyOwner() {
+        // require(msg.sender == owner);
+        if (msg.sender != i_owner) revert FundMe__notOwner();
+        _;
+    }
 
     constructor(address priceFeedAddress) {
         priceFeed = AggregatorV3Interface(priceFeedAddress);
         i_owner = msg.sender;
     }
 
+    receive() external payable {
+        fund();
+    }
+
+    fallback() external payable {
+        fund();
+    }
+
+    /** @notice this function funds this contract
+     *  @dev this implements price feeds as our library
+     */
     function fund() public payable {
         require(
             msg.value.getConversionRate(priceFeed) >= MINIMUM_USD,
@@ -35,12 +55,6 @@ contract FundMe {
     function getVersion() public view returns (uint256) {
         // ETH/USD price feed address of Goerli Network.
         return priceFeed.version();
-    }
-
-    modifier onlyOwner() {
-        // require(msg.sender == owner);
-        if (msg.sender != i_owner) revert NotOwner();
-        _;
     }
 
     function withdraw() public onlyOwner {
@@ -58,13 +72,5 @@ contract FundMe {
             value: address(this).balance
         }("");
         require(callSuccess, "Call failed");
-    }
-
-    fallback() external payable {
-        fund();
-    }
-
-    receive() external payable {
-        fund();
     }
 }
